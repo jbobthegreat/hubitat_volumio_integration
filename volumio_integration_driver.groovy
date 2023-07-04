@@ -3,15 +3,16 @@ Volumio Music Player Integration for Hubitat
 Author: Flint IronStag
 
 Revision History
-06.26.2023 - Initial Release
+1.01 07.04.2023 - Cleaned up attributes to avoid duplication of built-in attributes from MusicPlayer and AudioVolume capabilities
+                  Added level and trackDescription to refresh() method
+                  Ref: https://docs2.hubitat.com/developer/driver/capability-list
+1.00 06.25.2023 - Initial Release
 
 To reduce clutter, not all fields reported by Volumio are reported by this driver
 Not all commands integral to the Hubitat Music Player capability are utilized
 
 This driver uses the Volumio REST API. Reference Volumio REST API Manual --> https://volumio.github.io/docs/API/REST_API.html
 
-Known issues:
-- Volumio API response is sometimes out of sync for playerstatus.  Running "play", "pause", or "stop" again will sync it up
 */
 
 metadata {
@@ -28,13 +29,10 @@ metadata {
         command "clearQueue"
         command "haltRefresh"
         
-        attribute "PlayerStatus", "string"
-        attribute "Title", "string"
-        attribute "Artist", "string"
-        attribute "Album", "string"
-        attribute "MusicService", "string"
-        attribute "Volume", "number"
-        attribute "Mute", "string"
+        attribute "title", "string"
+        attribute "artist", "string"
+        attribute "album", "string"
+        attribute "musicservice", "string"
 	}
 }
 
@@ -89,17 +87,20 @@ def volumioCmd(cmd) {
 //Refresh Volumio status
 def refresh () {
     ( volumioGet("getState") )
-    def attributes = ["PlayerStatus", "Title", "Artist", "Album", "MusicService", "Volume", "Mute"]  //all attribute names
-    def respDataNames = ["status","title","artist","album","service","volume", "mute"]  //items of interest from Volumio JSON return data
-    for(int i in 0..6) {
+    def attributes = ["status", "artist", "title", "album", "musicservice", "volume", "level", "mute"]  //all attribute names
+    def respDataNames = ["status","artist","title","album","service","volume", "volume", "mute"]  //items of interest from Volumio JSON return data
+    for(int i in 0..(attributes.size-1)) {
         def oldValue = device.currentValue("${attributes[i]}")
         def newValue = respData."${respDataNames[i]}"
          if ("${newValue}"){  //checks for null data. Uses string value because "mute" JSON data is boolean and returns false when unmuted
-            if ("${newValue}" != "${oldValue}") {( updateAttribute(attributes[i], newValue) )}
+            if ("${newValue}" != "${oldValue}") {( updateAttribute(attributes[i], newValue) )}  //Uses string value because "mute" attribute data is string, but JSON data is boolean
             if (settings.debugOutput) {log.debug "${device.getLabel()}: oldValue: ${oldValue} newValue: ${newValue}"}
          }
         else if (oldValue != "None") {( updateAttribute(attributes[i], "None") )}
     }
+    def oldTrackDesc = device.currentValue("trackDescription")
+    def newTrackDesc = "${respData.artist} - ${respData.title} (${respData.album})"
+    if (newTrackDesc != oldTrackDesc){( updateAttribute("trackDescription", newTrackDesc) )}
 }
 def updateAttribute(attrName, attrValue) {
     sendEvent(name:attrName, value:attrValue)
