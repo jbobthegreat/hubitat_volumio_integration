@@ -1,8 +1,10 @@
 /**
 Volumio Music Player Integration for Hubitat
 Author: Flint IronStag
+https://github.com/jbobthegreat/hubitat_volumio_integration
 
 Revision History
+1.02 07.06.2023 - Added trackData JSON object to refresh() method
 1.01 07.04.2023 - Cleaned up attributes to avoid duplication of built-in attributes from MusicPlayer and AudioVolume capabilities
                   Added level and trackDescription to refresh() method
                   Ref: https://docs2.hubitat.com/developer/driver/capability-list
@@ -41,6 +43,8 @@ preferences {
     input "debugOutput", "bool", title: "Enable device debug logging?", defaultValue: false, displayDuringSetup: false, required: false  //enables log messages except API responses
     input "APIdebugOutput", "bool", title: "Enable API debug logging?", defaultValue: false, displayDuringSetup: false, required: false  //enables only API response log messages
 }
+
+import groovy.json.JsonOutput
 
 def installed() {
 	log.info "${device.getLabel()}: Installed with settings: ${settings}"
@@ -87,20 +91,35 @@ def volumioCmd(cmd) {
 //Refresh Volumio status
 def refresh () {
     ( volumioGet("getState") )
+    def updateFlag = false
     def attributes = ["status", "artist", "title", "album", "musicservice", "volume", "level", "mute"]  //all attribute names
     def respDataNames = ["status","artist","title","album","service","volume", "volume", "mute"]  //items of interest from Volumio JSON return data
     for(int i in 0..(attributes.size-1)) {
         def oldValue = device.currentValue("${attributes[i]}")
         def newValue = respData."${respDataNames[i]}"
-         if ("${newValue}"){  //checks for null data. Uses string value because "mute" JSON data is boolean and returns false when unmuted
-            if ("${newValue}" != "${oldValue}") {( updateAttribute(attributes[i], newValue) )}  //Uses string value because "mute" attribute data is string, but JSON data is boolean
-            if (settings.debugOutput) {log.debug "${device.getLabel()}: oldValue: ${oldValue} newValue: ${newValue}"}
-         }
+        if ("${newValue}"){  //checks for null data. Uses string value because "mute" JSON data is boolean and returns false when unmuted
+            if ("${newValue}" != "${oldValue}") {  //Uses string value because "mute" attribute data is string, but JSON data is boolean
+                ( updateAttribute(attributes[i], newValue) )
+                if (i in [1,2,3,4]) {updateFlag = true} //sets flag for trackDesc and trackData updates
+            }
+        }
         else if (oldValue != "None") {( updateAttribute(attributes[i], "None") )}
+        if (settings.debugOutput) {log.debug "${device.getLabel()}: ${attributes[i]} oldValue: ${oldValue} newValue: ${newValue}"} //log
     }
-    def oldTrackDesc = device.currentValue("trackDescription")
-    def newTrackDesc = "${respData.artist} - ${respData.title} (${respData.album})"
-    if (newTrackDesc != oldTrackDesc){( updateAttribute("trackDescription", newTrackDesc) )}
+    if (updateFlag) {
+        def trackDesc = ""
+        if (respData.artist){trackDesc = "${respData.artist} - ${respData.title} : ${respData.album}"}
+        def trackData = [
+            artist: respData.artist,
+            title: respData.title,
+            album: respData.album,
+            image: respData.albumart,
+            source: respData.service
+        ]
+        def trackDataJson = JsonOutput.toJson(trackData)
+        ( updateAttribute("trackDescription", trackDesc) )
+        ( updateAttribute("trackData", trackDataJson) )
+    }
 }
 def updateAttribute(attrName, attrValue) {
     sendEvent(name:attrName, value:attrValue)
