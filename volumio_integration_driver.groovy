@@ -34,6 +34,7 @@ metadata {
         capability "Refresh"
 
         command "clearQueue"
+        command "enablePushNotifications"
         
         attribute "title", "string"
         attribute "artist", "string"
@@ -64,8 +65,8 @@ def updated() {
 def initialize() {
     log.info "${device.getLabel()}: Initializing"
     ( setDNI() )
-    ( enablePushNotifications() )
     ( scheduler(settings.schedulePush) )
+    ( enablePushNotifications() )
 }
 
 //Scheduler for re-enrolling push notifications
