@@ -6,14 +6,14 @@ https://github.com/jbobthegreat/hubitat_volumio_integration
 
 Revision History
 - 1.03 11.17.2023 - Restructured data retrieval to use Volumio's push notification API instead of constantly polling in order to reduce load on hub
--                   Ref: https://developers.volumio.com/api/rest-api#notifications
--                   Set the device network ID (DNI) to Volumio's MAC address during initialization.  Necessary in order for Hubitat to forward push notifications to the correct device
--                   (Hubitat receives POST data on port 39501 and forwards it to a device whose DNI matches the MAC address of the connection origin, using the parse() method in that device)
--                   Multiple small bug fixes
+                  Ref: https://developers.volumio.com/api/rest-api#notifications
+                  Set the device network ID (DNI) to Volumio's MAC address during initialization.  Necessary in order for Hubitat to forward push notifications to the correct device
+                  (Hubitat receives POST data on port 39501 and forwards it to a device whose DNI matches the MAC address of the connection origin, using the parse() method in that device)
+                  Multiple small bug fixes
 - 1.02 07.06.2023 - Added trackData JSON object to refresh() method
 - 1.01 07.04.2023 - Cleaned up attributes to avoid duplication of built-in attributes from MusicPlayer and AudioVolume capabilities
--                   Added level and trackDescription to refresh() method
--                   Ref: https://docs2.hubitat.com/developer/driver/capability-list
+                  Added level and trackDescription to refresh() method
+                  Ref: https://docs2.hubitat.com/developer/driver/capability-list
 - 1.00 06.25.2023 - Initial Release
 
 To reduce clutter, not all fields reported by Volumio are reported by this driver
