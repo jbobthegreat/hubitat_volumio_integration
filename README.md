@@ -31,7 +31,7 @@ Known issues:
 - As of Volumio 3.449, it's not possible to remove entries from Volumio's push notifications.  However, a reboot of the Volumio device will clear the notification list.  This driver includes an option to re-enroll for push notifications daily at a specified time to work around this. 
 
 Installation: 
-- Add contents of raw file to custom drivers section in Hubitat
+- Add contents of raw volumio_integration_driver.groovy file to custom drivers section in Hubitat
 - Create new virtual device, select Volumio Music Player driver
 - Enter the hostname for your volumio hardware.  By default this is "volumio.local", but it can be any hostname or IP address.  "http://" or "https://" will be removed if included
 - Choose whether to automatically re-enroll in push notifications nightly and choose a time.  By default, this is "No"
