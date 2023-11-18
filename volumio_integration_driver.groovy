@@ -4,6 +4,11 @@ Author: Flint IronStag
 https://github.com/jbobthegreat/hubitat_volumio_integration
 
 Revision History
+1.03 11.17.2023 - Restructured data retrieval to use Volumio's push notification API instead of constantly polling in order to reduce load on hub
+                  Ref: https://developers.volumio.com/api/rest-api#notifications
+                  Set the device network ID (DNI) to Volumio's MAC address during initialization.  Necessary in order for Hubitat to forward push notifications to the correct device
+                  (Hubitat receives POST data on port 39501 and forwards it to a device whose DNI matches the MAC address of the connection origin, using the parse() method in that device)
+                  Multiple small bug fixes
 1.02 07.06.2023 - Added trackData JSON object to refresh() method
 1.01 07.04.2023 - Cleaned up attributes to avoid duplication of built-in attributes from MusicPlayer and AudioVolume capabilities
                   Added level and trackDescription to refresh() method
@@ -29,7 +34,6 @@ metadata {
         capability "Refresh"
 
         command "clearQueue"
-        command "haltRefresh"
         
         attribute "title", "string"
         attribute "artist", "string"
@@ -39,12 +43,14 @@ metadata {
 }
 
 preferences {
-    input "volumiohost", "text", title: "Enter Volumio hostname", defaultValue: "volumio.local", displayDuringSetup: true, required: true
+    input "volumioHost", "text", title: "Enter Volumio hostname or IP", defaultValue: "volumio.local", displayDuringSetup: true, required: true
+    input "schedulePush", "enum", title: "Automatically re-enroll in push notifications nightly? (enrollment resets after Volumio restarts)", options: ["No","12 AM","1 AM","2 AM","3 AM","4 AM","5 AM","6 AM","7 AM","8 AM","9 AM","10 AM","11 AM","12 PM","1 PM","2 PM","3 PM","4 PM","5 PM","6 PM","7 PM","8 PM","9 PM","10 PM","11 PM",], defaultValue: "No", displayDuringSetup: true, required: true
     input "debugOutput", "bool", title: "Enable device debug logging?", defaultValue: false, displayDuringSetup: false, required: false  //enables log messages except API responses
     input "APIdebugOutput", "bool", title: "Enable API debug logging?", defaultValue: false, displayDuringSetup: false, required: false  //enables only API response log messages
 }
 
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
 def installed() {
 	log.info "${device.getLabel()}: Installed with settings: ${settings}"
@@ -57,20 +63,88 @@ def updated() {
 
 def initialize() {
     log.info "${device.getLabel()}: Initializing"
-    schedule("* * * ? * *", refresh)  //Cron schedule running refresh() once per second
+    ( setDNI() )
+    ( enablePushNotifications() )
+    ( scheduler(settings.schedulePush) )
 }
 
-//Halt refresh() in case of runaway loop. Run Initialize command to resume
-def haltRefresh(){
-    unschedule()
-    log.warn "${device.getLabel()}: Data refresh halted"
+//Scheduler for re-enrolling push notifications
+def scheduler(time) {
+    if (time == "No") {
+        unschedule (enablePushNotifications)
+    }
+    else {
+        int hr = time.split(" ")[0] as int
+        if (hr == 12) {hr-=12}  //to deal with 12AM and 12PM correctly
+        if (time.split(" ")[1] == "PM") {hr+=12}
+        schedule("0 0 ${hr} * * ?", enablePushNotifications)  //Cron schedule running enablePushNotifications()
+        log.info "${device.getLabel()}: Scheduled push notification enrollment every day at ${time}"
+    }    
 }
 
-//Volumio REST API call
+//Set device network ID to be Volumio MAC address to catch push notifications
+def setDNI() {
+    ( volumioGet("getSystemInfo") )
+    def host = respData.host
+    def ip = host.drop(host.indexOf("//")+2)  //IP clean-up
+    def volumioMAC = getMACFromIP(ip)
+    if (device.deviceNetworkId != volumioMAC) {
+        device.deviceNetworkId = volumioMAC  //set device network ID to MAC
+        log.info "${device.getLabel()}: Device Network ID set to Volumio MAC address ${volumioMAC}"
+    }
+    else {log.info "${device.getLabel()}: Device Network ID already set to Volumio MAC address ${volumioMAC}"}
+}
+
+//Enroll for push notifications
+def enablePushNotifications() {
+    def hubIP = location.hub.localIP
+	def hubPort = "39501"
+	def host = settings.volumioHost
+    if (host.contains("//")) {host = host.drop(host.indexOf("//")+2)}  //hostname clean-up
+	def path = "/api/v1/pushNotificationUrls?url=http://${hubIP}:${hubPort}"
+	def body = "{\"url\":\"http://${hubIP}:${hubPort}\"}"
+    def method = "POST"
+	def headers = [:] 
+    headers.put("HOST", "${host}:80")
+    headers.put("Content-Type", "application/json")
+    try {
+        def hubAction = new hubitat.device.HubAction(
+            method: method,
+            path: path,
+            body: body,
+            headers: headers
+            )
+        log.info "${device.getLabel()}: Push Notifications Enabled"
+        return hubAction
+    }
+    catch (Exception e) {
+        log.error "enablePushNotifications exception ${e} on ${hubAction}"
+	}  
+}
+
+//Manually refresh data
+def refresh() {
+    ( volumioGet("getState") )
+    ( parseResp(respData) )
+}
+
+//Manual GET
+def volumioGet(cmd) {
+	def path = "/api/v1/"
+    ( httpGetVolumio(path, cmd) )
+}
+
+//Send Command
+def volumioCmd(cmd) {
+	def path = "/api/v1/commands/?cmd="
+    ( httpGetVolumio(path, cmd) )
+    log.info "${device.getLabel()}: Sent Command: ${cmd}"
+}
+
+//Volumio REST API data handler
 def httpGetVolumio(path, cmd) {
-    def host = settings.volumiohost
-    if (host.contains("http://")) {host = host.drop(7)}  //hostname clean-up
-    if (host.contains("https://")) {host = host.drop(8)} //hostname clean-up
+    def host = settings.volumioHost
+    if (host.contains("//")) {host = host.drop(host.indexOf("//")+2)}  //hostname clean-up
     httpGet([uri: "http://${host}${path}${cmd}",
 	contentType: "application/json",
 	timeout: 5])
@@ -79,18 +153,20 @@ def httpGetVolumio(path, cmd) {
     if (settings.APIdebugOutput) {log.debug "${device.getLabel()}: REST API Response: ${respData.response}"}  //log
     }
 }
-def volumioGet(cmd) {
-	def path = "/api/v1/"
-    ( httpGetVolumio(path, cmd) )
-}
-def volumioCmd(cmd) {
-	def path = "/api/v1/commands/?cmd="
-    ( httpGetVolumio(path, cmd) )
+
+//Hubitat POST data handler. Must be named parse() to catch push notifications from hub
+def parse(input) {
+    def body = input.split("body:")[1]
+    byte[] decoded = body.decodeBase64()
+    def decodedStr = new String(decoded)
+    def decodedJson = new JsonSlurper().parseText(decodedStr)
+    if(!decodedJson.item) {log.info "Push Notification from ${device.getLabel()}: ${decodedJson}"}
+    if (settings.APIdebugOutput) {log.debug "API Debug Push Notification from ${device.getLabel()}: ${decodedJson}"}
+    if (decodedJson.item == "state"){( parseResp(decodedJson.data) )}
 }
 
-//Refresh Volumio status
-def refresh () {
-    ( volumioGet("getState") )
+//JSON response data parser
+def parseResp (respData) {
     def updateFlag = false
     def attributes = ["status", "artist", "title", "album", "musicservice", "volume", "level", "mute"]  //all attribute names
     def respDataNames = ["status","artist","title","album","service","volume", "volume", "mute"]  //items of interest from Volumio JSON return data
@@ -100,15 +176,18 @@ def refresh () {
         if ("${newValue}"){  //checks for null data. Uses string value because "mute" JSON data is boolean and returns false when unmuted
             if ("${newValue}" != "${oldValue}") {  //Uses string value because "mute" attribute data is string, but JSON data is boolean
                 ( updateAttribute(attributes[i], newValue) )
-                if (i in [1,2,3,4]) {updateFlag = true} //sets flag for trackDesc and trackData updates
+                if (i in [1,2,3]) {updateFlag = true} //sets flag for trackDesc and trackData updates
             }
         }
-        else if (oldValue != "None") {( updateAttribute(attributes[i], "None") )}
+        else {
+            if (oldValue != "none") {( updateAttribute(attributes[i], "none") )}
+            if (i in [1,2,3]) {updateFlag = true} //sets flag for trackDesc and trackData updates
+        }
         if (settings.debugOutput) {log.debug "${device.getLabel()}: ${attributes[i]} oldValue: ${oldValue} newValue: ${newValue}"} //log
     }
     if (updateFlag) {
-        def trackDesc = ""
-        if (respData.artist){trackDesc = "${respData.artist} - ${respData.title} : ${respData.album}"}
+        def trackDesc = "none"
+        if (respData.artist){trackDesc = "${respData.artist} - ${respData.title} on ${respData.album}"}
         def trackData = [
             artist: respData.artist,
             title: respData.title,
@@ -121,9 +200,11 @@ def refresh () {
         ( updateAttribute("trackData", trackDataJson) )
     }
 }
+
+//Device attribute updater
 def updateAttribute(attrName, attrValue) {
     sendEvent(name:attrName, value:attrValue)
-    log.info "${device.getLabel()}: ${attrName} updated: ${attrValue}"
+    log.info "${device.getLabel()}: ${attrName}: ${attrValue}"
 }
 
 //Player commands
