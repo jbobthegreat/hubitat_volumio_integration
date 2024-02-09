@@ -31,7 +31,8 @@ This driver uses the Volumio REST API. Reference Volumio REST API Manual --> htt
 Known issues:
 - Volumio API sometimes sends multiple push notifications in quick succession, faster than Hubitat can update the device attributes.  This produces duplicate log entries, but has no other detrimental effects.
 - As of Volumio 3.512, it's not possible to remove entries from Volumio's push notifications.  However, a reboot of the Volumio device will clear the notification list.  This driver includes an option to re-enroll for push notifications daily at a specified time to work around this.
-- Volumio does not send a notification when playlists are created or deleted.  In order to get a correct list of Playlists to appear in Current States, use the Refresh command.  
+- Volumio does not send a notification when playlists are created or deleted.  In order to get a correct list of Playlists to appear in Current States, use the Refresh command.
+- The Play Track and Set Track commands do not work with Youtube URI's.  
 
 Installation: 
 - Add contents of raw volumio_integration_driver.groovy file to custom drivers section in Hubitat
