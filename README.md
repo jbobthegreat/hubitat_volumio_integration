@@ -43,7 +43,7 @@ Installation:
 
 Misc Notes: 
 - If needed for whatever reason, use the Refresh command to perform a manual data update
-- Running the Enable Push Notifications command will manually re-enroll for push notifications
+- Running the Enable Push Notifications command will manually re-enroll for push notifications.  This can be run if the Volumio device restarts unexpectedly, rather than waiting for the automatic re-enroll.  
 - If either the Hubitat hub or the Volumio device change MAC addresses, re-run the initialize command
   - The initialize command checks the DNI against the Volumio MAC address, enrolls in push notifications, and schedules automatic re-enrollment daily if the preference is set to do so
 - This driver was tested only for local Volumio devices on the same network as the Hubitat hub.  It may work with remote access devices or over a VPN, but this is untested. 
