@@ -4,10 +4,12 @@ Author: Flint IronStag
 https://github.com/jbobthegreat/hubitat_volumio_integration
 
 Revision History
+1.05 02.09.2024 - Fixed bug preventing setTrack and playTrack from working with some music services
 1.04 02.08.2024 - Added Repeat and Random toggle commands
                   Added uri and otherzones attributes
 				  Added functionality to setTrack (add to queue) and playTrack (replace queue and play) commands
                   Added functionality to get and play specified Volumio playlists - Contributed by Ashrond (modified)
+                  https://github.com/ashrond/hubitat_volumio_integration/tree/main
 1.03 11.17.2023 - Restructured data retrieval to use Volumio's push notification API instead of constantly polling in order to reduce load on hub
                   Ref: https://developers.volumio.com/api/rest-api#notifications
                   Set the device network ID (DNI) to Volumio's MAC address during initialization.  Necessary in order for Hubitat to forward push notifications to the correct device
@@ -41,6 +43,8 @@ metadata {
         command "enablePushNotifications"
         command "toggleRepeat"
         command "toggleRandom"
+        command "playTrack", [[name:"Track URI*", type:"STRING", description:"URI/URL of track to play (required)"],[name:"Music Service*", type:"STRING", description:"Service name for track (required)"],[name:"Title", type:"STRING", description:"Track title (optional)"]]
+        command "setTrack", [[name:"Track URI*", type:"STRING", description:"URI/URL of track to add to queue (required)"],[name:"Music Service*", type:"STRING", description:"Service name for track (required)"],[name:"Title", type:"STRING", description:"Track title (optional)"]]
         command "setPlaylist", [[name:"Set Playlist*", type:"STRING", description:"Playlist name (case sensitive)"]]
         command "clearStateVariable", [[name:"Clear State Variable*", type:"STRING", description:"State variable name"]]
         
@@ -284,17 +288,25 @@ def setPlaylist(playlist) {
         }
     }
 }
-def setTrack(uri) {
+def setTrack(uri, service, title=null) {
 	def path = "/api/v1/addToQueue"
-	def body = "{\"uri\":\"${uri}\"}"
+    def body = [:]
+    body.put("service", service)
+    body.put("uri", uri)
+    if (title) {body.put("title", title)}
+    def bodyJson = JsonOutput.toJson(body)
     def logMsg = "Add to queue: ${uri}"
     httpPostVolumio(path, body, logMsg)
 }
-def playTrack(uri) {
+def playTrack(uri, service, title=null) {
 	def path = "/api/v1/replaceAndPlay"
-	def body = "{\"uri\":\"${uri}\"}"
+    def body = [:]
+    body.put("service", service)
+    body.put("uri", uri)
+    if (title) {body.put("title", title)}
+    def bodyJson = JsonOutput.toJson(body)
     def logMsg = "Replace queue and play: ${uri}"
-    httpPostVolumio(path, body, logMsg)
+    httpPostVolumio(path, bodyJson, logMsg)
 }
 
 
