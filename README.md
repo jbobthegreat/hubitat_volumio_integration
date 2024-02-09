@@ -5,6 +5,7 @@ Volumio Music Player Integration for Hubitat
 https://github.com/jbobthegreat/hubitat_volumio_integration
 
 Revision History
+- 1.05 02.09.2024 - Fixed bug preventing setTrack and playTrack from working with some music services
 - 1.04 02.08.2024 - Added Repeat and Random toggle commands
                     Added uri and otherzones attributes
 				            Added functionality to setTrack (add to queue) and playTrack (replace queue and play) commands
@@ -32,7 +33,7 @@ Known issues:
 - Volumio API sometimes sends multiple push notifications in quick succession, faster than Hubitat can update the device attributes.  This produces duplicate log entries, but has no other detrimental effects.
 - As of Volumio 3.512, it's not possible to remove entries from Volumio's push notifications.  However, a reboot of the Volumio device will clear the notification list.  This driver includes an option to re-enroll for push notifications daily at a specified time to work around this.
 - Volumio does not send a notification when playlists are created or deleted.  In order to get a correct list of Playlists to appear in Current States, use the Refresh command.
-- The Play Track and Set Track commands do not work with Youtube URI's.  
+- The Play Track and Set Track commands do not work with Pandora station URI's.  
 
 Installation: 
 - Add contents of raw volumio_integration_driver.groovy file to custom drivers section in Hubitat
@@ -48,6 +49,6 @@ Misc Notes:
 - If either the Hubitat hub or the Volumio device change MAC addresses, re-run the initialize command
   - The initialize command checks the DNI against the Volumio MAC address, enrolls in push notifications, and schedules automatic re-enrollment daily if the preference is set to do so
 - This driver was tested only for local Volumio devices on the same network as the Hubitat hub.  It may work with remote access devices or over a VPN, but this is untested. 
-- The track URI is shown in the "uri" attribute shown in Current States.
-- The Play Track command will replace the Volumio queue and begin playback on the specified URI.  
+- The track URI and Music Service required for Play Track and Set Track are shown in Current States, and are accessible to rules. 
+- The Play Track command will replace the Volumio queue and begin playback on the specified URI.  The title field is optional, but can be filled in for web radio stations if desired. 
 - The Set Track command will add a specified URI to the end of the current playback queue.  
