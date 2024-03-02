@@ -50,12 +50,12 @@ How to find the URI for a track, playlist, or station:
 - The Play Track and Set Track commands both require the URI of the item to be played.  The URI can be an individual track from any music service, but the commands will also accept playlists/albums from Spotify, YouTube, etc, or Pandora stations
 - For individual tracks, the URI is shown in Current States under the attribute "uri"
 - Other URI's can be accessed using the browse function of the Volumio API.  Reference https://developers.volumio.com/api/rest-api#browsing
-- 	The quick version
-- 	In a web browser, navigate to http://[volumio-hostname]/api/v1/browse
-- 	This will return something like the following
-- 	[code]
-- 	test
-- 	[/code]
+- The quick version
+- In a web browser, navigate to http://[volumio-hostname]/api/v1/browse
+- This will return something like the following
+  [code]
+  test
+  [/code]
 
 Misc Notes: 
 - If needed for whatever reason, use the Refresh command to perform a manual data update
