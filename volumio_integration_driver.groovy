@@ -307,14 +307,18 @@ def setPlaylist(playlist) {
     }
 }
 def setTrack(uri, service, title=null) {
+    if (service.contains("pandora")) {
+	playTrack(uri, service, title)
+    } else {
 	def path = "/api/v1/addToQueue"
-    def body = [:]
-    body.put("service", service)
-    body.put("uri", uri)
-    if (title) {body.put("title", title)}
-    def bodyJson = JsonOutput.toJson(body)
-    def logMsg = "Add to queue: ${body}"
-    httpPostVolumio(path, body, logMsg)
+	def body = [:]
+	body.put("service", service)
+	body.put("uri", uri)
+	if (title) {body.put("title", title)}
+	def bodyJson = JsonOutput.toJson(body)
+	def logMsg = "Add to queue: ${body}"
+	httpPostVolumio(path, body, logMsg)
+    }
 }
 def playTrack(uri, service, title=null) {
     if (service.contains("pandora")) {
