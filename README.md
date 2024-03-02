@@ -5,6 +5,9 @@ Volumio Music Player Integration for Hubitat
 https://github.com/jbobthegreat/hubitat_volumio_integration
 
 Revision History
+- 1.06 03.01.2024 - Updated random() and repeat() methods to either toggle or set explicitly
+		    Added ability to play Pandora channels to Play Track command
+		    Bug fixes
 - 1.05 02.09.2024 - Fixed bug preventing setTrack and playTrack from working with some music services
 - 1.04 02.08.2024 - Added Repeat and Random toggle commands
                     Added uri and otherzones attributes
@@ -31,21 +34,32 @@ This driver uses the Volumio REST API. Reference Volumio REST API Manual --> htt
 
 Known issues:
 - Volumio API sometimes sends multiple push notifications in quick succession, faster than Hubitat can update the device attributes.  This produces duplicate log entries, but has no other detrimental effects.
-- As of Volumio 3.512, it's not possible to remove entries from Volumio's push notifications.  However, a reboot of the Volumio device will clear the notification list.  This driver includes an option to re-enroll for push notifications daily at a specified time to work around this.
+- As of Volumio 3.616, it's not possible to remove entries from Volumio's push notifications.  However, a reboot of the Volumio device will clear the notification list.  This driver includes an option to re-enroll for push notifications daily at a specified time to work around this.
 - Volumio does not send a notification when playlists are created or deleted.  In order to get a correct list of Playlists to appear in Current States, use the Refresh command.
-- The Play Track and Set Track commands do not work with Pandora station URI's.  
+- Using a URI to a local Volumio playlist with the Play Track or Set Track commands does not work. 
 
 Installation: 
 - Add contents of raw volumio_integration_driver.groovy file to custom drivers section in Hubitat
 - Create new virtual device, select Volumio Music Player driver
 - Enter the hostname for your volumio hardware.  By default this is "volumio.local", but it can be any hostname or IP address.  "http://" or "https://" will be removed if included
-- Choose whether to automatically re-enroll in push notifications nightly and choose a time.  By default, this is "No"
-- Save settings to initialize
+- Choose whether to automatically re-enroll in push notifications nightly and choose a time (only required if your Volumio device reboots daily).  By default, this is "No"
+- Save settings to initialize.  Driver will automatically enroll in push notifications when initialized
 - Recommended to disable debug logging and API debug logging unless there is a problem.  It will make the log huge
+
+How to find the URI for a track, playlist, or station:
+- The Play Track and Set Track commands both require the URI of the item to be played.  The URI can be an individual track from any music service, but the commands will also accept playlists/albums from Spotify, YouTube, etc, or Pandora stations
+- For individual tracks, the URI is shown in Current States under the attribute "uri"
+- Other URI's can be accessed using the browse function of the Volumio API.  Reference https://developers.volumio.com/api/rest-api#browsing
+- 	The quick version
+- 	In a web browser, navigate to http://[volumio-hostname]/api/v1/browse
+- 	This will return something like the following
+- 	[code]
+- 	test
+- 	[/code]
 
 Misc Notes: 
 - If needed for whatever reason, use the Refresh command to perform a manual data update
-- Running the Enable Push Notifications command will manually re-enroll for push notifications.  This can be run if the Volumio device restarts unexpectedly, rather than waiting for the automatic re-enroll.  
+- Running the Enable Push Notifications command will manually re-enroll for push notifications.  This can be run if the Volumio device restarts unexpectedly, rather than waiting for the automatic re-enroll
 - If either the Hubitat hub or the Volumio device change MAC addresses, re-run the initialize command
   - The initialize command checks the DNI against the Volumio MAC address, enrolls in push notifications, and schedules automatic re-enrollment daily if the preference is set to do so
 - This driver was tested only for local Volumio devices on the same network as the Hubitat hub.  It may work with remote access devices or over a VPN, but this is untested. 
