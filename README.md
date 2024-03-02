@@ -52,69 +52,124 @@ How to find the URI for a track, playlist, or station:
 - Other URI's can be accessed using the browse function of the Volumio API.  Reference https://developers.volumio.com/api/rest-api#browsing
 - The quick version
 - In a web browser, navigate to
-```
-http://[volumio-hostname]/api/v1/browse
-```
-- This will return a JSON formatted reply that should look something like the following.  Most browsers will pretty it up for readability
-
-```
-{
-  "navigation": {
-    "lists": [
-      {
-        "albumart": "/albumart?sourceicon=music_service/mpd/playlisticon.png",
-        "name": "Playlists",
-        "uri": "playlists",
-        "plugin_type": "music_service",
-        "plugin_name": "mpd"
-      },
-      {
-        "albumart": "/albumart?sourceicon=music_service/mpd/musiclibraryicon.png",
-        "name": "Music Library",
-        "uri": "music-library",
-        "plugin_type": "music_service",
-        "plugin_name": "mpd"
-      },
-      {
-        "albumart": "/albumart?sourceicon=music_service/webradio/icon.png",
-        "icon": "fa fa-microphone",
-        "name": "Web Radio",
-        "uri": "radio",
-        "plugin_type": "music_service",
-        "plugin_name": "webradio"
-      },
-      {
-        "name": "YouTube2",
-        "uri": "youtube2",
-        "plugin_type": "music_service",
-        "plugin_name": "youtube2",
-        "albumart": "/albumart?sourceicon=music_service/youtube2/dist/assets/images/youtube.svg"
-      },
-      {
-        "name": "Pandora Radio",
-        "uri": "/pandora",
-        "albumart": "/albumart?sourceicon=music_service/pandora/pandora.png",
-        "icon": "fa fa-microphone",
-        "plugin_type": "music_service",
-        "plugin_name": "pandora"
-      },
-      {
-        "name": "Spotify",
-        "uri": "spotify",
-        "plugin_type": "music_service",
-        "plugin_name": "spop",
-        "albumart": "/albumart?sourceicon=music_service/spop/spotify.png"
-      }
-    ]
+  ```
+  http://[volumio-hostname]/api/v1/browse
+  ```
+- This will return a JSON object that should look something like the following.  Most browsers will pretty it up for readability
+  ```
+  {
+    "navigation": {
+      "lists": [
+        {
+          "albumart": "/albumart?sourceicon=music_service/mpd/playlisticon.png",
+          "name": "Playlists",
+          "uri": "playlists",
+          "plugin_type": "music_service",
+          "plugin_name": "mpd"
+        },
+        {
+          "albumart": "/albumart?sourceicon=music_service/mpd/musiclibraryicon.png",
+          "name": "Music Library",
+          "uri": "music-library",
+          "plugin_type": "music_service",
+          "plugin_name": "mpd"
+        },
+        {
+          "albumart": "/albumart?sourceicon=music_service/webradio/icon.png",
+          "icon": "fa fa-microphone",
+          "name": "Web Radio",
+          "uri": "radio",
+          "plugin_type": "music_service",
+          "plugin_name": "webradio"
+        },
+        {
+          "name": "YouTube2",
+          "uri": "youtube2",
+          "plugin_type": "music_service",
+          "plugin_name": "youtube2",
+          "albumart": "/albumart?sourceicon=music_service/youtube2/dist/assets/images/youtube.svg"
+        },
+        {
+          "name": "Pandora Radio",
+          "uri": "/pandora",
+          "albumart": "/albumart?sourceicon=music_service/pandora/pandora.png",
+          "icon": "fa fa-microphone",
+          "plugin_type": "music_service",
+          "plugin_name": "pandora"
+        },
+        {
+          "name": "Spotify",
+          "uri": "spotify",
+          "plugin_type": "music_service",
+          "plugin_name": "spop",
+          "albumart": "/albumart?sourceicon=music_service/spop/spotify.png"
+        }
+      ]
+    }
   }
-}
-```
+  ```
 - Choose the music service you want and make note of the "uri" field
-- Navigate to the following, inserting your desired URI.  For an example, I'm using Spotify
+- Navigate to the following, inserting your desired URI.  For example, I'm using Spotify below
   ```
   http://[volumio-hostname]/api/v1/browse?uri=spotify
   ```
-
+- This will return another JSON object containing your Spotify items
+  ```
+    {
+    "navigation": {
+      "lists": [
+        {
+          "availableListViews": [
+            "grid",
+            "list"
+          ],
+          "type": "title",
+          "title": "My Music",
+          "items": [
+            {
+             "service": "spop",
+              "type": "streaming-category",
+              "title": "My Playlists",
+              "artist": "",
+              "album": "",
+              "albumart": "/albumart?sourceicon=music_service/spop/icons/playlist.png",
+              "uri": "spotify/playlists"
+            },
+            {
+              "service": "spop",
+              "type": "streaming-category",
+              "title": "My Albums",
+              "artist": "",
+              "album": "",
+              "albumart": "/albumart?sourceicon=music_service/spop/icons/album.png",
+              "uri": "spotify/myalbums"
+            },
+            {
+              "service": "spop",
+              "type": "streaming-category",
+              "title": "My Tracks",
+              "artist": "",
+              "album": "",
+              "albumart": "/albumart?sourceicon=music_service/spop/icons/track.png",
+              "uri": "spotify/mytracks"
+            },
+            {
+              "service": "spop",
+              "type": "streaming-category",
+              "title": "My Artists",
+              "artist": "",
+              "album": "",
+              "albumart": "/albumart?sourceicon=music_service/spop/icons/artist.png",
+              "uri": "spotify/myartists"
+            },
+           ]
+        }
+      ]
+    }
+  }
+  ```
+- Choose the category you want and again make note of the URI.
+- 
 
 Misc Notes: 
 - If needed for whatever reason, use the Refresh command to perform a manual data update
