@@ -53,9 +53,10 @@ How to find the URI for a track, playlist, or station:
 - The quick version
 - In a web browser, navigate to http://[volumio-hostname]/api/v1/browse
 - This will return something like the following
-  [code]
-  test
-  [/code]
+
+```
+test
+```
 
 Misc Notes: 
 - If needed for whatever reason, use the Refresh command to perform a manual data update
