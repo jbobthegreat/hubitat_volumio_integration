@@ -111,9 +111,9 @@ http://[volumio-hostname]/api/v1/browse
 ```
 - Choose the music service you want and make note of the "uri" field
 - Navigate to the following, inserting your desired URI.  For an example, I'm using Spotify
-```
-http://[volumio-hostname]/api/v1/browse?uri=spotify
-```
+  ```
+  http://[volumio-hostname]/api/v1/browse?uri=spotify
+  ```
 
 
 Misc Notes: 
