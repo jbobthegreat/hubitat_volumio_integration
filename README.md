@@ -157,11 +157,11 @@ This driver uses the Volumio REST API. Reference Volumio REST API Manual --> htt
           ],
           "items": [
             {
-     --->     "service": "spop",
+              "service": "spop",
               "type": "folder",
               "title": "This Endris Night",
               "albumart": "https://i.scdn.co/image/abcdefghijklmnopqrstuvwxyz1234567890",
-     --->     "uri": "spotify:album:1234567890ABCDEFGHIJKLMN"
+              "uri": "spotify:album:1234567890ABCDEFGHIJKLMN"
             }
           ]
         }
