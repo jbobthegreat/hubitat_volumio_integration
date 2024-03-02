@@ -51,8 +51,11 @@ How to find the URI for a track, playlist, or station:
 - For individual tracks, the URI is shown in Current States under the attribute "uri"
 - Other URI's can be accessed using the browse function of the Volumio API.  Reference https://developers.volumio.com/api/rest-api#browsing
 - The quick version
-- In a web browser, navigate to http://[volumio-hostname]/api/v1/browse
-- This will return a JSON formatted reply that should look something like the following
+- In a web browser, navigate to
+```
+http://[volumio-hostname]/api/v1/browse
+```
+- This will return a JSON formatted reply that should look something like the following.  Most browsers will pretty it up for readability
 
 ```
 {
@@ -106,6 +109,12 @@ How to find the URI for a track, playlist, or station:
   }
 }
 ```
+- Choose the music service you want and make note of the "uri" field
+- Navigate to the following, inserting your desired URI.  For an example, I'm using Spotify
+```
+http://[volumio-hostname]/api/v1/browse?uri=spotify
+```
+
 
 Misc Notes: 
 - If needed for whatever reason, use the Refresh command to perform a manual data update
