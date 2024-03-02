@@ -169,6 +169,11 @@ How to find the URI for a track, playlist, or station:
   }
   ```
 - Choose the category you want and again make note of the URI.
+- Navigate to the next desired URI, as before.
+  ```
+  http://[volumio-hostname]/api/v1/browse?uri=spotify/mytracks
+  ```
+- Continue in this pattern, until you find the track, album, or station URI you want to play
 - 
 
 Misc Notes: 
