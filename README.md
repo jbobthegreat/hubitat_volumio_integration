@@ -171,10 +171,36 @@ How to find the URI for a track, playlist, or station:
 - Choose the category you want and again make note of the URI.
 - Navigate to the next desired URI, as before.
   ```
-  http://[volumio-hostname]/api/v1/browse?uri=spotify/mytracks
+  http://[volumio-hostname]/api/v1/browse?uri=spotify/myalbums
   ```
-- Continue in this pattern, until you find the track, album, or station URI you want to play
-- 
+- Continue in this pattern, until you find the track, album, or station URI you want to play, for example
+  ```
+  {
+    "navigation": {
+      "prev": {
+        "uri": "spotify"
+      },
+      "lists": [
+        {
+          "availableListViews": [
+            "list",
+            "grid"
+          ],
+          "items": [
+            {
+              "service": "spop",
+              "type": "folder",
+              "title": "This Endris Night",
+              "albumart": "https://i.scdn.co/image/abcdefghijklmnopqrstuvwxyz1234567890",
+              "uri": "spotify:album:1234567890ABCDEFGHIJKLMN"
+            }
+          ]
+        }
+      ]
+    }
+  }
+  ```
+- Once located, the URI "spotify:album:1234567890ABCDEFGHIJKLMN" and music service "spop" can be given to the Play Track command using Rule Machine or manual controls to play that album.  Likewise for playlists or individual tracks
 
 Misc Notes: 
 - If needed for whatever reason, use the Refresh command to perform a manual data update
