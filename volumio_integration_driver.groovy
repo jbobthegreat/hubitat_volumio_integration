@@ -4,6 +4,9 @@ Author: Flint IronStag
 https://github.com/jbobthegreat/hubitat_volumio_integration
 
 Revision History
+1.06 03.01.2024 - Updated random() and repeat() methods to either toggle or set explicitly
+				  Added ability to play Pandora channels to Play Track command
+				  Bug fixes
 1.05 02.09.2024 - Fixed bug preventing setTrack and playTrack from working with some music services
 1.04 02.08.2024 - Added Repeat and Random toggle commands
                   Added uri and otherzones attributes
@@ -41,12 +44,12 @@ metadata {
 
         command "clearQueue"
         command "enablePushNotifications"
-        command "toggleRepeat"
-        command "toggleRandom"
+        command "repeat", [[name:"Repeat", type:"ENUM", "constraints":["","true","false"]]]
+        command "random", [[name:"Random", type:"ENUM", "constraints":["","true","false"]]]
         command "playTrack", [[name:"Track URI*", type:"STRING", description:"URI/URL of track to play (required)"],[name:"Music Service*", type:"STRING", description:"Service name for track (required)"],[name:"Title", type:"STRING", description:"Track title (optional)"]]
         command "setTrack", [[name:"Track URI*", type:"STRING", description:"URI/URL of track to add to queue (required)"],[name:"Music Service*", type:"STRING", description:"Service name for track (required)"],[name:"Title", type:"STRING", description:"Track title (optional)"]]
-        command "setPlaylist", [[name:"Set Playlist*", type:"STRING", description:"Playlist name (case sensitive)"]]
-        command "clearStateVariable", [[name:"Clear State Variable*", type:"STRING", description:"State variable name"]]
+        command "setPlaylist", [[name:"Playlist*", type:"STRING", description:"Playlist name (case sensitive)"]]
+        command "clearStateVariable", [[name:"State Variable*", type:"STRING", description:"State variable name"]]
         
         attribute "title", "string"
         attribute "artist", "string"
@@ -125,6 +128,8 @@ def enablePushNotifications() {
 def refresh() {
     volumioGet("getState")
     parseState(respData)
+    volumioGet("getZones")
+    parseZones(respData.zones)
     volumioGet("listplaylists")
     def playlists = "${respData}".take("${respData}".size()-1).drop(1)   //Remove [ ] brackets from string beginning and end
     sendEvent(name: "playlists", value: playlists)  //Not using updateAttribute method because no log entry is needed
@@ -134,6 +139,7 @@ def refresh() {
 def volumioGet(cmd) {
 	def path = "/api/v1/"
     httpGetVolumio(path, cmd)
+    log.info "${device.getLabel()}: Sent Command: ${cmd}"
 }
 
 //Send Command
@@ -160,7 +166,7 @@ def httpPostVolumio(path, body, logMsg) {
         log.info "${device.getLabel()}: ${logMsg}"
         return hubAction
     } catch (Exception e) {
-        log.error "httpPostVolumio exception ${e} on ${hubAction}"
+        log.error "${device.getLabel()}: Invalid REST API Response: exception ${e} on ${hubAction}"
 	}  
 }
 
@@ -168,11 +174,15 @@ def httpPostVolumio(path, body, logMsg) {
 def httpGetVolumio(path, cmd) {
     def host = settings.volumioHost
     if (host.contains("//")) {host = host.drop(host.indexOf("//")+2)}  //hostname clean-up
-    httpGet([uri: "http://${host}${path}${cmd}",
-	contentType: "application/json",
-	timeout: 5]) { resp ->
-	respData = resp.data
-    if (settings.APIdebugOutput) {log.debug "${device.getLabel()}: REST API Response: ${respData.response}"}  //log
+    try {
+        httpGet([uri: "http://${host}${path}${cmd}",
+	    contentType: "application/json",
+	    timeout: 5]) { resp ->
+	    respData = resp.data
+        if (settings.APIdebugOutput) {log.debug "${device.getLabel()}: REST API Response: ${respData.response}"}  //log
+        }
+    } catch (Exception e) {
+        if (resp) {log.error "${device.getLabel()}: Invalid REST API Response: ${respData}"}   //won't error on a null response
     }
 }
 
@@ -184,8 +194,9 @@ def parse(input) {
     def decodedJson = new JsonSlurper().parseText(decodedStr)
     if (settings.APIdebugOutput) {log.debug "API Debug Push Notification from ${device.getLabel()}: ${decodedJson}"}
     if (!decodedJson.item) {log.info "Push Notification from ${device.getLabel()}: ${decodedJson}"}
-    else if (decodedJson.item == "state") {parseState(decodedJson.data) }
-    else if (decodedJson.item == "zones") {parseZones(decodedJson.data) }
+    else if (decodedJson.item == "state") {parseState(decodedJson.data)}
+	//else if (decodedJson.item == "queue") {parseQueue(decodedJson.data)}  //Future expansion
+    else if (decodedJson.item == "zones") {parseZones(decodedJson.data.list)}
 }
 
 //Player State JSON data parser
@@ -224,14 +235,15 @@ def parseState(respData) {
     }
 }
 
+
 //Zones JSON data parser
 def parseZones(respData) {
     def oldZones = device.currentValue("otherzones")
     def otherZones = []
-    for (int i in 0..(respData.list.size-1)) {
-        if (!respData.list[i].isSelf) {
-            def zoneName = respData.list[i].name
-            def zoneStatus = respData.list[i].state.status
+    for (int i in 0..(respData.size-1)) {
+        if (!respData[i].isSelf) {
+            def zoneName = respData[i].name
+            def zoneStatus = respData[i].state.status
             otherZones.add("${zoneName}":zoneStatus)
         }
     }
@@ -267,11 +279,17 @@ def nextTrack() {
 def previousTrack() {
     volumioCmd("prev")
 }
-def toggleRepeat() {
-    volumioCmd("repeat")
+def repeat(key) {
+    def cmd = ""
+    if (!key) {cmd = "repeat"}
+    else {cmd = "repeat&value=${key}"}
+    volumioCmd(cmd)
 }
-def toggleRandom () {
-    volumioCmd("random")
+def random (key) {
+    def cmd = ""
+    if (!key) {cmd = "random"}
+    else {cmd = "random&value=${key}"}
+    volumioCmd(cmd)
 }
 def clearQueue() {
     volumioCmd("clearQueue")
@@ -295,18 +313,22 @@ def setTrack(uri, service, title=null) {
     body.put("uri", uri)
     if (title) {body.put("title", title)}
     def bodyJson = JsonOutput.toJson(body)
-    def logMsg = "Add to queue: ${uri}"
+    def logMsg = "Add to queue: ${body}"
     httpPostVolumio(path, body, logMsg)
 }
 def playTrack(uri, service, title=null) {
-	def path = "/api/v1/replaceAndPlay"
-    def body = [:]
-    body.put("service", service)
-    body.put("uri", uri)
-    if (title) {body.put("title", title)}
-    def bodyJson = JsonOutput.toJson(body)
-    def logMsg = "Replace queue and play: ${uri}"
-    httpPostVolumio(path, bodyJson, logMsg)
+    if (service.contains("pandora")) {
+        volumioGet("browse?uri=${uri}")
+    } else {
+        def path = "/api/v1/replaceAndPlay"
+        def body = [:]
+        body.put("service", service)
+        body.put("uri", uri)
+        if (title) {body.put("title", title)}
+        def bodyJson = JsonOutput.toJson(body)
+        def logMsg = "Replace queue and play: ${body}"
+        httpPostVolumio(path, bodyJson, logMsg)
+    }
 }
 
 
