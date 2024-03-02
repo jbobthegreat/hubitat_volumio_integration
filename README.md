@@ -37,7 +37,8 @@ This driver uses the Volumio REST API. Reference Volumio REST API Manual --> htt
 - As of Volumio 3.616, it's not possible to remove entries from Volumio's push notifications.  However, a reboot of the Volumio device will clear the notification list.  This driver includes an option to re-enroll for push notifications daily at a specified time to work around this.
 - Volumio does not send a notification when playlists are created or deleted.  In order to get a correct list of Playlists to appear in Current States, use the Refresh command.
 - Using a URI to a local Volumio playlist with the Play Track or Set Track commands does not work. Use the Set Playlist command instead.
-- When using a Pandora station URI with the Set Track command, the station will begin playing immediately instead of merely adding to the queue. 
+- When using a Pandora station URI with the Set Track command, the station will begin playing immediately instead of merely adding to the queue.
+- Playing a Pandora track directly using the Play Track command does not work.  Only Pandora stations can be played this way. 
 
 ## Installation: 
 - Add contents of raw volumio_integration_driver.groovy file to custom drivers section in Hubitat
