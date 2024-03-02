@@ -52,10 +52,59 @@ How to find the URI for a track, playlist, or station:
 - Other URI's can be accessed using the browse function of the Volumio API.  Reference https://developers.volumio.com/api/rest-api#browsing
 - The quick version
 - In a web browser, navigate to http://[volumio-hostname]/api/v1/browse
-- This will return something like the following
+- This will return a JSON formatted reply that should look something like the following
 
 ```
-test
+{
+  "navigation": {
+    "lists": [
+      {
+        "albumart": "/albumart?sourceicon=music_service/mpd/playlisticon.png",
+        "name": "Playlists",
+        "uri": "playlists",
+        "plugin_type": "music_service",
+        "plugin_name": "mpd"
+      },
+      {
+        "albumart": "/albumart?sourceicon=music_service/mpd/musiclibraryicon.png",
+        "name": "Music Library",
+        "uri": "music-library",
+        "plugin_type": "music_service",
+        "plugin_name": "mpd"
+      },
+      {
+        "albumart": "/albumart?sourceicon=music_service/webradio/icon.png",
+        "icon": "fa fa-microphone",
+        "name": "Web Radio",
+        "uri": "radio",
+        "plugin_type": "music_service",
+        "plugin_name": "webradio"
+      },
+      {
+        "name": "YouTube2",
+        "uri": "youtube2",
+        "plugin_type": "music_service",
+        "plugin_name": "youtube2",
+        "albumart": "/albumart?sourceicon=music_service/youtube2/dist/assets/images/youtube.svg"
+      },
+      {
+        "name": "Pandora Radio",
+        "uri": "/pandora",
+        "albumart": "/albumart?sourceicon=music_service/pandora/pandora.png",
+        "icon": "fa fa-microphone",
+        "plugin_type": "music_service",
+        "plugin_name": "pandora"
+      },
+      {
+        "name": "Spotify",
+        "uri": "spotify",
+        "plugin_type": "music_service",
+        "plugin_name": "spop",
+        "albumart": "/albumart?sourceicon=music_service/spop/spotify.png"
+      }
+    ]
+  }
+}
 ```
 
 Misc Notes: 
