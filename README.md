@@ -4,7 +4,7 @@ Volumio Integration for Hubitat
 Volumio Music Player Integration for Hubitat
 https://github.com/jbobthegreat/hubitat_volumio_integration
 
-#Revision History
+# Revision History
 - 1.06 03.01.2024 - Updated random() and repeat() methods to either toggle or set explicitly
 		    Added ability to play Pandora channels to Play Track command
 		    Bug fixes
@@ -32,14 +32,14 @@ Not all commands integral to the Hubitat Music Player capability are utilized.  
 
 This driver uses the Volumio REST API. Reference Volumio REST API Manual --> https://volumio.github.io/docs/API/REST_API.html
 
-#Known issues:
+# Known issues:
 - Volumio API sometimes sends multiple push notifications in quick succession, faster than Hubitat can update the device attributes.  This produces duplicate log entries, but has no other detrimental effects.
 - As of Volumio 3.616, it's not possible to remove entries from Volumio's push notifications.  However, a reboot of the Volumio device will clear the notification list.  This driver includes an option to re-enroll for push notifications daily at a specified time to work around this.
 - Volumio does not send a notification when playlists are created or deleted.  In order to get a correct list of Playlists to appear in Current States, use the Refresh command.
 - Using a URI to a local Volumio playlist with the Play Track or Set Track commands does not work.
 - When using a Pandora station URI with the Set Track command, the station will begin playing immediately instead of merely adding to the queue. 
 
-#Installation: 
+# Installation: 
 - Add contents of raw volumio_integration_driver.groovy file to custom drivers section in Hubitat
 - Create new virtual device, select Volumio Music Player driver
 - Enter the hostname for your volumio hardware.  By default this is "volumio.local", but it can be any hostname or IP address.  "http://" or "https://" will be removed if included
@@ -47,7 +47,7 @@ This driver uses the Volumio REST API. Reference Volumio REST API Manual --> htt
 - Save settings to initialize.  Driver will automatically enroll in push notifications when initialized
 - Recommended to disable debug logging and API debug logging unless there is a problem.  It will make the log huge
 
-#How to find the URI for a track, playlist, or station:
+# How to find the URI for a track, playlist, or station:
 - The Play Track and Set Track commands both require the URI of the item to be played.  The URI can be an individual track from any music service, but the commands will also accept playlists/albums from Spotify, YouTube, etc, or Pandora stations
 - For individual tracks, the URI is shown in Current States under the attribute "uri"
 - Other URI's can be accessed using the browse function of the Volumio API.  Reference https://developers.volumio.com/api/rest-api#browsing
@@ -171,7 +171,7 @@ This driver uses the Volumio REST API. Reference Volumio REST API Manual --> htt
   ```
 - Once located, the URI "spotify:album:1234567890ABCDEFGHIJKLMN" and music service "spop" can be given to the Play Track command using Rule Machine or manual controls to play that album.  Likewise for playlists or individual tracks
 
-#Misc Notes: 
+# Misc Notes: 
 - If needed for whatever reason, use the Refresh command to perform a manual data update
 - Running the Enable Push Notifications command will manually re-enroll for push notifications.  This can be run if the Volumio device restarts unexpectedly, rather than waiting for the automatic re-enroll
 - If either the Hubitat hub or the Volumio device change MAC addresses, re-run the initialize command
