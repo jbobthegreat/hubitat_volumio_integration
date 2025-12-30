@@ -5,9 +5,12 @@ Volumio Music Player Integration for Hubitat
 https://github.com/jbobthegreat/hubitat_volumio_integration
 
 ## Revision History
+- 1.07 11.06.2025 - Fixed status attribute values to match Hubitat MusicPlayer capability standard
+				  (Changed "play"/"pause"/"stop" to "playing"/"paused"/"stopped")
+				  This fixes Rule Machine's "toggle play/pause" action for button controllers
 - 1.06 03.01.2024 - Updated random() and repeat() methods to either toggle or set explicitly
-		    Added ability to play Pandora channels to Play Track command
-		    Bug fixes
+		           Added ability to play Pandora channels to Play Track command
+		           Bug fixes
 - 1.05 02.09.2024 - Fixed bug preventing setTrack and playTrack from working with some music services
 - 1.04 02.08.2024 - Added Repeat and Random toggle commands
                     Added uri and otherzones attributes
