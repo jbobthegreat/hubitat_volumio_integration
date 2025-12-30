@@ -4,6 +4,9 @@ Author: Flint IronStag
 https://github.com/jbobthegreat/hubitat_volumio_integration
 
 Revision History
+1.07 11.06.2025 - Fixed status attribute values to match Hubitat MusicPlayer capability standard
+				  (Changed "play"/"pause"/"stop" to "playing"/"paused"/"stopped")
+				  This fixes Rule Machine's "toggle play/pause" action for button controllers
 1.06 03.01.2024 - Updated random() and repeat() methods to either toggle or set explicitly
 				  Added ability to play Pandora channels to Play Track command
 				  Bug fixes
@@ -207,6 +210,14 @@ def parseState(respData) {
     for(int i in 0..(attributes.size-1)) {
         def oldValue = device.currentValue("${attributes[i]}")
         def newValue = respData."${respDataNames[i]}"
+
+        // Translate Volumio status values to Hubitat MusicPlayer standard values
+        if (attributes[i] == "status" && newValue) {
+            if (newValue == "play") { newValue = "playing" }
+            else if (newValue == "pause") { newValue = "paused" }
+            else if (newValue == "stop") { newValue = "stopped" }
+        }
+
         if ("${newValue}") {  //checks for null data. Uses string value because "mute" JSON data is boolean and returns false when unmuted
             if ("${newValue}" != "${oldValue}") {  //Uses string value because "mute" attribute data is string, but JSON data is boolean
                 ( updateAttribute(attributes[i], newValue) )
